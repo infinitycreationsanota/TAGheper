@@ -11,6 +11,14 @@ body {
     height: 100vh;
 }
 
+img.logo {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 50px; /* Tamanho pequeno a médio */
+    opacity: 0.8; /* Transparência leve */
+}
+
 #tag-helper {
     display: flex;
     gap: 20px;
