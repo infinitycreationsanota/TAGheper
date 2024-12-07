@@ -1,60 +1,71 @@
 ```javascript
-document.addEventListener('DOMContentLoaded', function() {
-    const keyList = document.getElementById('key-list');
-    const resultList = document.getElementById('result-list');
-    const addKeyBtn = document.getElementById('add-key');
-    const addResultBtn = document.getElementById('add-result');
-    const keySearch = document.getElementById('key-search');
-    const resultSearch = document.getElementById('result-search');
-    const keys = [];  // This array will hold key objects
-    const results = [];  // This array will hold result objects
-    function renderList(listElement, data) {
-        listElement.innerHTML = '';
+document.addEventListener('DOMContentLoaded', () => {
+    const keywordSearch = document.getElementById('keyword-search');
+    const relatedSearch = document.getElementById('related-search');
+    const addKeywordBtn = document.getElementById('add-keyword');
+    const addRelatedBtn = document.getElementById('add-related');
+    const keywordList = document.getElementById('keyword-list');
+    const relatedList = document.getElementById('related-list');
+    const keywords = [];
+    const results = []; // { text: "Result", linkedKeywords: [] }
+    function renderList(listEl, data, isKeyword) {
+        listEl.innerHTML = '';
         data.forEach((item, index) => {
             const li = document.createElement('li');
-            li.textContent = item.text;
-            const deleteBtn = document.createElement('button');
-17h16
-deleteBtn.textContent = 'X';
-            deleteBtn.onclick = () => {
-                data.splice(index, 1);
-                renderList(listElement, data);
+            li.innerHTML = <div>${item.text}</div><span>${isKeyword ? '' : item.linkedKeywords.length + ' assoc.'}</span>;
+            li.onclick = () => {
+                if (!isKeyword) {
+                    const keywordSelected = document.querySelector('#keyword-list .selected');
+                    if (keywordSelected) {
+                        const keyword = keywords[keywordSelected.dataset.index];
+18h08
+const idx = item.linkedKeywords.indexOf(keyword.text);
+                        if (idx === -1) {
+                            item.linkedKeywords.push(keyword.text);
+                            li.classList.add('selected');
+                        } else {
+                            item.linkedKeywords.splice(idx, 1);
+                            li.classList.remove('selected');
+                        }
+                        renderList(relatedList, results, false);
+                    }
+                } else {
+                    const allKeywords = document.querySelectorAll('#keyword-list li');
+                    allKeywords.forEach(kw => kw.classList.remove('selected'));
+                    li.classList.add('selected');
+                    renderList(relatedList, results, false);
+                }
             };
-            li.appendChild(deleteBtn);
-            listElement.appendChild(li);
+            li.dataset.index = index;
+            listEl.appendChild(li);
         });
     }
-    function addItem(dataArray, itemText) {
-        const newItem = { text: itemText, related: [] };
-        dataArray.push(newItem);
-        return newItem;
+    function addItem(inputId, dataArray, isKeyword) {
+        const newItemText = inputId.value.trim();
+        if (newItemText) {
+            if (isKeyword) {
+                keywords.push({ text: newItemText });
+                renderList(keywordList, keywords, true);
+            } else {
+                results.push({ text: newItemText, linkedKeywords: [] });
+                renderList(relatedList, results, false);
+            }
+            inputId.value = '';
+        }
     }
-    addKeyBtn.addEventListener('click', () => {
-        const newKey = prompt('Digite a nova palavra-chave:');
-        if (newKey) {
-            addItem(keys, newKey);
-            renderList(keyList, keys);
-        }
+    addKeywordBtn.onclick = () => addItem(keywordSearch, keywords, true);
+    addRelatedBtn.onclick = () => addItem(relatedSearch, results, false);
+    keywordSearch.addEventListener('input', () => {
+        const query = keywordSearch.value.toLowerCase();
+        const filteredKeywords = keywords.filter(k => k.text.toLowerCase().includes(query));
+        renderList(keywordList, filteredKeywords, true);
     });
-    addResultBtn.addEventListener('click', () => {
-        const newResult = prompt('Digite o novo resultado:');
-        if (newResult) {
-            addItem(results, newResult);
-            renderList(resultList, results);
-        }
+    relatedSearch.addEventListener('input', () => {
+        const query = relatedSearch.value.toLowerCase();
+        const filteredRelated = results.filter(r => r.text.toLowerCase().includes(query));
+        renderList(relatedList, filteredRelated, false);
     });
-    keySearch.addEventListener('input', () => {
-        const query = keySearch.value.toLowerCase();
-        const filteredKeys = keys.filter(k => k.text.toLowerCase().includes(query));
-        renderList(keyList, filteredKeys);
-    });
-    resultSearch.addEventListener('input', () => {
-        const query = resultSearch.value.toLowerCase();
-        const filteredResults = results.filter(r => r.text.toLowerCase().includes(query));
-        renderList(resultList, filteredResults);
-    });
-    // Render initial lists
-    renderList(keyList, keys);
-    renderList(resultList, results);
+    renderList(keywordList, keywords, true);
+    renderList(relatedList, results, false);
 });
 ```
