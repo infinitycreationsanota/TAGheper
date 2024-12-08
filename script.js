@@ -1,4 +1,64 @@
+
 ```javascript
+const API_URL = 'https://script.google.com/u/0/home/projects/17sNK2Xa0FaIJ6q0Jxim-vgCLFkwT270_iOpJaQ26RbZJAvSIDTJFGnID/edit'; // Substitua por sua URL do Apps Script
+
+async function fetchKeywords() {
+    const response = await fetch(API_URL);
+    const keywords = await response.json();
+    return keywords;
+}
+
+async function addKeyword(keywordText) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ keyword: keywordText })
+    });
+
+    const newKeyword = await response.json();
+    return newKeyword;
+}
+
+addKeywordBtn.onclick = async () => {
+    const newKeywordText = keywordSearch.value.trim();
+    if (newKeywordText) {
+        const newKeyword = await addKeyword(newKeywordText);
+        keywords.push(newKeyword);
+        renderList(keywordList, keywords, true);
+        keywordSearch.value = '';
+    }
+};
+
+// Chame fetchKeywords() para popular a lista inicial
+fetchKeywords().then(fetchedKeywords => {
+    keywords.push(...fetchedKeywords);
+    renderList(keywordList, keywords, true);
+});
+
+
+function doGet(request) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const rows = sheet.getDataRange().getValues();
+  let data = [];
+  rows.forEach((row, index) => {
+    if (index > 0) { // Skip header
+      data.push({ id: row[0], keyword: row[1] });
+    }
+  });
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(request) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const params = JSON.parse(request.postData.contents);
+  const lastRow = sheet.getLastRow();
+  const nextId = lastRow > 0 ? sheet.getRange(lastRow, 1).getValue() + 1 : 1;
+  sheet.appendRow([nextId, params.keyword]);
+  return ContentService.createTextOutput(JSON.stringify({ id: nextId, keyword: params.keyword })).setMimeType(ContentService.MimeType.JSON);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const keywordSearch = document.getElementById('keyword-search');
     const relatedSearch = document.getElementById('related-search');
@@ -39,6 +99,27 @@ const idx = item.linkedKeywords.indexOf(keyword.text);
             li.dataset.index = index;
             listEl.appendChild(li);
         });
+
+        function doGet(request) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const rows = sheet.getDataRange().getValues();
+  let data = [];
+  rows.forEach((row, index) => {
+    if (index > 0) { // Skip header
+      data.push({ id: row[0], keyword: row[1] });
+    }
+  });
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(request) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const params = JSON.parse(request.postData.contents);
+  const lastRow = sheet.getLastRow();
+  const nextId = lastRow > 0 ? sheet.getRange(lastRow, 1).getValue() + 1 : 1;
+  sheet.appendRow([nextId, params.keyword]);
+  return ContentService.createTextOutput(JSON.stringify({ id: nextId, keyword: params.keyword })).setMimeType(ContentService.MimeType.JSON);
+}
     }
     function addItem(inputId, dataArray, isKeyword) {
         const newItemText = inputId.value.trim();
