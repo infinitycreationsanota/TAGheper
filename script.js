@@ -1,6 +1,5 @@
-
 ```javascript
-const API_URL = 'AKfycbzo5GAej602T0UXSSYgmGThC5TWkTxf58fKyojjf_xcXWCTYGXbYEDaaOQjpyrVy_mD'; // Substitua por sua URL do Apps Script
+const API_URL = 'https://script.google.com/macros/library/d/17sNK2Xa0FaIJ6q0Jxim-vgCLFkwT270_iOpJaQ26RbZJAvSIDTJFGnID/2'; // Substitua pela URL do seu serviço Google Apps Script
 
 async function fetchKeywords() {
     const response = await fetch(API_URL);
@@ -21,132 +20,86 @@ async function addKeyword(keywordText) {
     return newKeyword;
 }
 
-addKeywordBtn.onclick = async () => {
-    const newKeywordText = keywordSearch.value.trim();
-    if (newKeywordText) {
-        const newKeyword = await addKeyword(newKeywordText);
-        keywords.push(newKeyword);
-        renderList(keywordList, keywords, true);
-        keywordSearch.value = '';
-    }
-};
-
-// Chame fetchKeywords() para popular a lista inicial
-fetchKeywords().then(fetchedKeywords => {
-    keywords.push(...fetchedKeywords);
-    renderList(keywordList, keywords, true);
-});
-
-
-function doGet(request) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const rows = sheet.getDataRange().getValues();
-  let data = [];
-  rows.forEach((row, index) => {
-    if (index > 0) { // Skip header
-      data.push({ id: row[0], keyword: row[1] });
-    }
-  });
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(request) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const params = JSON.parse(request.postData.contents);
-  const lastRow = sheet.getLastRow();
-  const nextId = lastRow > 0 ? sheet.getRange(lastRow, 1).getValue() + 1 : 1;
-  sheet.appendRow([nextId, params.keyword]);
-  return ContentService.createTextOutput(JSON.stringify({ id: nextId, keyword: params.keyword })).setMimeType(ContentService.MimeType.JSON);
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     const keywordSearch = document.getElementById('keyword-search');
     const relatedSearch = document.getElementById('related-search');
+    const searchKeywordBtn = document.getElementById('search-keyword');
+    const searchRelatedBtn = document.getElementById('search-related');
     const addKeywordBtn = document.getElementById('add-keyword');
     const addRelatedBtn = document.getElementById('add-related');
     const keywordList = document.getElementById('keyword-list');
     const relatedList = document.getElementById('related-list');
+
     const keywords = [];
-    const results = []; // { text: "Result", linkedKeywords: [] }
-    function renderList(listEl, data, isKeyword) {
+    const results = []; // { text: "Relacionado", linkedKeywords: [] }
+
+    function renderList(listEl, data, type) {
         listEl.innerHTML = '';
-        data.forEach((item, index) => {
+        data.forEach((item) => {
             const li = document.createElement('li');
-            li.innerHTML = <div>${item.text}</div><span>${isKeyword ? '' : item.linkedKeywords.length + ' assoc.'}</span>;
-            li.onclick = () => {
-                if (!isKeyword) {
-                    const keywordSelected = document.querySelector('#keyword-list .selected');
-                    if (keywordSelected) {
-                        const keyword = keywords[keywordSelected.dataset.index];
-18h08
-const idx = item.linkedKeywords.indexOf(keyword.text);
-                        if (idx === -1) {
-                            item.linkedKeywords.push(keyword.text);
-                            li.classList.add('selected');
-                        } else {
-                            item.linkedKeywords.splice(idx, 1);
-                            li.classList.remove('selected');
-                        }
-                        renderList(relatedList, results, false);
-                    }
-                } else {
-                    const allKeywords = document.querySelectorAll('#keyword-list li');
-                    allKeywords.forEach(kw => kw.classList.remove('selected'));
-                    li.classList.add('selected');
-                    renderList(relatedList, results, false);
-                }
-            };
-            li.dataset.index = index;
+            li.textContent = item.keyword || item.text;
+            li.classList.toggle('selected', item.selected || false);
+            li.onclick = () => toggleSelection(item, type);
             listEl.appendChild(li);
         });
-
-        function doGet(request) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const rows = sheet.getDataRange().getValues();
-  let data = [];
-  rows.forEach((row, index) => {
-    if (index > 0) { // Skip header
-      data.push({ id: row[0], keyword: row[1] });
     }
-  });
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}
 
-function doPost(request) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const params = JSON.parse(request.postData.contents);
-  const lastRow = sheet.getLastRow();
-  const nextId = lastRow > 0 ? sheet.getRange(lastRow, 1).getValue() + 1 : 1;
-  sheet.appendRow([nextId, params.keyword]);
-  return ContentService.createTextOutput(JSON.stringify({ id: nextId, keyword: params.keyword })).setMimeType(ContentService.MimeType.JSON);
-}
-    }
-    function addItem(inputId, dataArray, isKeyword) {
-        const newItemText = inputId.value.trim();
-        if (newItemText) {
-            if (isKeyword) {
-                keywords.push({ text: newItemText });
-                renderList(keywordList, keywords, true);
+    function toggleSelection(item, type) {
+        if (type === 'keyword') {
+            // Toggle keyword selection and refresh related list
+            item.selected = !item.selected;
+            renderList(relatedList, results, 'related');
+        } else {
+            // Toggle related selection
+            const selectedKeyword = keywords.find(k => k.selected);
+            const index = item.linkedKeywords.indexOf(selectedKeyword.keyword);
+            if (index === -1) {
+                item.linkedKeywords.push(selectedKeyword.keyword);
             } else {
-                results.push({ text: newItemText, linkedKeywords: [] });
-                renderList(relatedList, results, false);
+                item.linkedKeywords.splice(index, 1);
             }
-            inputId.value = '';
+            renderList(relatedList, results, 'related');
         }
     }
-    addKeywordBtn.onclick = () => addItem(keywordSearch, keywords, true);
-    addRelatedBtn.onclick = () => addItem(relatedSearch, results, false);
-    keywordSearch.addEventListener('input', () => {
+
+    searchKeywordBtn.onclick = () => {
         const query = keywordSearch.value.toLowerCase();
-        const filteredKeywords = keywords.filter(k => k.text.toLowerCase().includes(query));
-        renderList(keywordList, filteredKeywords, true);
-    });
-    relatedSearch.addEventListener('input', () => {
+        const filteredKeywords = keywords.filter(k => k.keyword.toLowerCase().includes(query));
+        renderList(keywordList, filteredKeywords, 'keyword');
+    };
+
+    searchRelatedBtn.onclick = () => {
         const query = relatedSearch.value.toLowerCase();
         const filteredRelated = results.filter(r => r.text.toLowerCase().includes(query));
-        renderList(relatedList, filteredRelated, false);
+        renderList(relatedList, filteredRelated, 'related');
+    };
+
+    addKeywordBtn.onclick = async () => {
+        const newKeywordText = keywordSearch.value.trim();
+        if (newKeywordText) {
+            const newKeyword = await addKeyword(newKeywordText);
+            keywords.push(Object.assign(newKeyword, { selected: false }));
+            renderList(keywordList, keywords, 'keyword');
+            keywordSearch.value = '';
+        }
+    };
+
+    addRelatedBtn.onclick = () => {
+        const newRelatedText = relatedSearch.value.trim();
+        if (newRelatedText) {
+            results.push({ text: newRelatedText, linkedKeywords: [] });
+            renderList(relatedList, results, 'related');
+            relatedSearch.value = '';
+        }
+    };
+
+    // Chame fetchKeywords() para popular a lista inicial
+
+
+fetchKeywords().then(fetchedKeywords => {
+        fetchedKeywords.forEach(item => keywords.push(Object.assign(item, { selected: false })));
+        renderList(keywordList, keywords, 'keyword');
     });
-    renderList(keywordList, keywords, true);
-    renderList(relatedList, results, false);
 });
+
 ```
