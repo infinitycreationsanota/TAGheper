@@ -1,6 +1,6 @@
 
 ```javascript
-const API_URL = 'https://script.google.com/a/macros/anota.ai/s/AKfycbzo5GAej602T0UXSSYgmGThC5TWkTxf58fKyojjf_xcXWCTYGXbYEDaaOQjpyrVy_mD/exec'; // Substitua por sua URL do Apps Script
+const API_URL = 'AKfycbzo5GAej602T0UXSSYgmGThC5TWkTxf58fKyojjf_xcXWCTYGXbYEDaaOQjpyrVy_mD'; // Substitua por sua URL do Apps Script
 
 async function fetchKeywords() {
     const response = await fetch(API_URL);
