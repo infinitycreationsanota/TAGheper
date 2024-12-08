@@ -11,9 +11,23 @@ body {
     height: 100vh;
 }
 
+header {
+    width: 100%;
+    background-color: #0288d1; /* Azul Anota Aí */
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+}
+
+header h1 {
+    color: white;
+    margin: 0;
+}
+
 img.logo {
     position: absolute;
-    top: 10px;
+    top: 20px;
     right: 10px;
     width: 50px; /* Tamanho pequeno a médio */
     opacity: 0.8; /* Transparência leve */
