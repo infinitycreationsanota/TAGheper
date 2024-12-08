@@ -1,23 +1,19 @@
-```javascript
-const API_URL = 'https://script.google.com/macros/library/d/17sNK2Xa0FaIJ6q0Jxim-vgCLFkwT270_iOpJaQ26RbZJAvSIDTJFGnID/2'; // Substitua pela URL do seu serviço Google Apps Script
+const API_URL = 'https://script.google.com/a/macros/anota.ai/s/AKfycbzdH31s4oohxHQdMG-eN2jShy2MZzPGpTAwu1iE1MzAgKBK1GtFYBZ1oMJsdtDfgA3-/exec';
 
-async function fetchKeywords() {
+async function fetchData() {
     const response = await fetch(API_URL);
-    const keywords = await response.json();
-    return keywords;
+    const data = await response.json();
+    return data;
 }
 
-async function addKeyword(keywordText) {
-    const response = await fetch(API_URL, {
+async function postData(type, text) {
+    await fetch(API_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ keyword: keywordText })
+        body: JSON.stringify({ type, text })
     });
-
-    const newKeyword = await response.json();
-    return newKeyword;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,76 +26,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const keywordList = document.getElementById('keyword-list');
     const relatedList = document.getElementById('related-list');
 
-    const keywords = [];
-    const results = []; // { text: "Relacionado", linkedKeywords: [] }
+    let keywords = [];
+    let relateds = [];
 
     function renderList(listEl, data, type) {
         listEl.innerHTML = '';
-        data.forEach((item) => {
+        data.forEach(item => {
             const li = document.createElement('li');
-            li.textContent = item.keyword || item.text;
-            li.classList.toggle('selected', item.selected || false);
-            li.onclick = () => toggleSelection(item, type);
+            li.textContent = item;
+            li.onclick = () => toggleSelection(item, type, li);
             listEl.appendChild(li);
         });
     }
 
-    function toggleSelection(item, type) {
+    function toggleSelection(item, type, li) {
+        li.classList.toggle('selected');
         if (type === 'keyword') {
-            // Toggle keyword selection and refresh related list
-            item.selected = !item.selected;
-            renderList(relatedList, results, 'related');
-        } else {
-            // Toggle related selection
-            const selectedKeyword = keywords.find(k => k.selected);
-            const index = item.linkedKeywords.indexOf(selectedKeyword.keyword);
-            if (index === -1) {
-                item.linkedKeywords.push(selectedKeyword.keyword);
-            } else {
-                item.linkedKeywords.splice(index, 1);
-            }
-            renderList(relatedList, results, 'related');
+            // Handle keyword selection logic
         }
     }
-
-    searchKeywordBtn.onclick = () => {
-        const query = keywordSearch.value.toLowerCase();
-        const filteredKeywords = keywords.filter(k => k.keyword.toLowerCase().includes(query));
-        renderList(keywordList, filteredKeywords, 'keyword');
-    };
-
-    searchRelatedBtn.onclick = () => {
-        const query = relatedSearch.value.toLowerCase();
-        const filteredRelated = results.filter(r => r.text.toLowerCase().includes(query));
-        renderList(relatedList, filteredRelated, 'related');
-    };
 
     addKeywordBtn.onclick = async () => {
         const newKeywordText = keywordSearch.value.trim();
         if (newKeywordText) {
-            const newKeyword = await addKeyword(newKeywordText);
-            keywords.push(Object.assign(newKeyword, { selected: false }));
+            await postData('keyword', newKeywordText);
+            keywords.push(newKeywordText);
             renderList(keywordList, keywords, 'keyword');
             keywordSearch.value = '';
         }
     };
 
-    addRelatedBtn.onclick = () => {
+    addRelatedBtn.onclick = async () => {
         const newRelatedText = relatedSearch.value.trim();
         if (newRelatedText) {
-            results.push({ text: newRelatedText, linkedKeywords: [] });
-            renderList(relatedList, results, 'related');
+            await postData('related', newRelatedText);
+            relateds.push(newRelatedText);
+            renderList(relatedList, relateds, 'related');
             relatedSearch.value = '';
         }
     };
 
-    // Chame fetchKeywords() para popular a lista inicial
-
-
-fetchKeywords().then(fetchedKeywords => {
-        fetchedKeywords.forEach(item => keywords.push(Object.assign(item, { selected: false })));
+    fetchData().then(data => {
+        keywords = data.palavrasChave;
+        relateds = data.relacionados;
         renderList(keywordList, keywords, 'keyword');
+        renderList(relatedList, relateds, 'related');
     });
 });
-
-```
