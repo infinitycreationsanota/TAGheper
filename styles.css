@@ -1,14 +1,14 @@
 css
 body {
-    font-family: 'Helvetica', sans-serif;
-    background-color: #dcf6fa; /* Light cyan background */
+    font-family: 'Arial', sans-serif;
+    background-color: #e0f7fa; /* Light cyan background */
     color: #333;
     margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 0;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 header {
@@ -21,28 +21,32 @@ header {
 }
 
 header h1 {
-    color: #0288d1;
+    color: rgb(4, 9, 78);
     margin: 0;
-}
-
-img.logo {
-    position: absolute;
-    top: 20px;
-    right: 10px;
-    width: 50px; /* Tamanho pequeno a médio */
-    opacity: 0.8; /* Transparência leve */
+    font-size: 1.5em;
 }
 
 #tag-helper {
     display: flex;
-    gap: 20px;
-    max-width: 800px;
+    justify-content: center;
+    gap: 40px;
+    max-width: 1000px;
     width: 100%;
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.list-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 45%;
 }
 
 h2 {
-    color: #0288d1; /* Sky blue for titles */
-    margin-bottom: 10px;
+    color: rgb(4, 9, 78); /* Sky blue for titles */
+    margin-bottom: 0px;
+    text-align: center;
 }
 
 input[type="text"] {
@@ -61,13 +65,13 @@ input[type="text"]:focus {
 }
 
 button {
-    padding: 10px;
+    padding: 10px 20px;
     background-color: #0277bd;
     color: white;
     border: none;
     border-radius: 4px;
-    margin-bottom: 10px;
     cursor: pointer;
+    margin-bottom: 10px;
     width: 100%;
 }
 
@@ -83,6 +87,7 @@ ul {
     background: white;
     border: 1px solid #cccccc;
     border-radius: 4px;
+    width: 100%;
 }
 
 li {
@@ -100,12 +105,10 @@ li.selected {
     border-left: 5px solid #03a9f4; /* Highlight color for selected items */
 }
 
-li div {
-    display: inline-block;
-    width: 90%;
-}
-
-li span {
-    font-size: 0.8em;
-    color: #777;
+img.logo {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 50px; /* Tamanho pequeno a médio */
+    opacity: 0.8; /* Transparência leve */
 }
